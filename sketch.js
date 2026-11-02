@@ -1,155 +1,77 @@
-let flowers = [];
-let clouds = [];
-let bees = [];
+let tiles = []; // Array to store falling tiles
+let score = 0;  // Growth score
 
 function setup() {
-  createCanvas(800, 600);
-  colorMode(HSB, 360, 100, 100, 100);
-  noStroke();
-
-  for (let i = 0; i < 14; i++) {
-    flowers.push({
-      x: random(60, width - 60),
-      y: random(height * 0.66, height - 30),
-      size: random(16, 34),
-      hue: random(20, 60),
-      petal: random(20, 80),
-      stem: random(50, 110),
-      angle: random(TWO_PI)
-    });
-  }
-
-  for (let i = 0; i < 5; i++) {
-    clouds.push({
-      x: random(width),
-      y: random(80, 180),
-      w: random(90, 150),
-      h: random(30, 48),
-      speed: random(0.2, 0.7)
-    });
-  }
-
-  for (let i = 0; i < 6; i++) {
-    bees.push({
-      x: random(width),
-      y: random(180, height * 0.7),
-      r: random(4, 8),
-      speed: random(0.5, 2.2),
-      phase: random(TWO_PI)
-    });
-  }
+  // Step 1: Create game screen and basic setup
+  createCanvas(600, 400); 
+  textAlign(CENTER, CENTER);
+  textSize(24);
 }
 
 function draw() {
-  drawSky();
-  drawGround();
-  drawFlowers();
-  drawBees();
-}
+  // Step 2: Draw thematic background
+  background(200, 230, 255); // Sky blue
+  stroke(150, 200, 150); strokeWeight(2);
+  line(150, 0, 150, 400); line(300, 0, 300, 400); line(450, 0, 450, 400); // Tracks
+  
+  fill(100, 180, 100); noStroke();
+  rect(0, 300, 600, 100); // Bottom grass
 
-function drawSky() {
-  background(160, 70, 90);
-
-  const sunX = width * 0.78;
-  const sunY = 100;
-  fill(48, 90, 90, 82);
-  circle(sunX, sunY, 110);
-
-  for (const cloud of clouds) {
-    cloud.x += cloud.speed;
-    if (cloud.x > width + 100) {
-      cloud.x = -150;
-    }
-
-    fill(100, 0, 100, 72);
-    ellipse(cloud.x, cloud.y, cloud.w, cloud.h);
-    ellipse(cloud.x + cloud.w * 0.25, cloud.y - 8, cloud.w * 0.7, cloud.h * 0.9);
-    ellipse(cloud.x - cloud.w * 0.25, cloud.y - 6, cloud.w * 0.8, cloud.h * 0.8);
+  // Step 3: Draw bottom keys UI
+  fill(255); stroke(100, 150, 100); strokeWeight(2);
+  for (let i = 0; i < 4; i++) {
+    rect(i * 150 + 2, 300, 146, 100); 
   }
-}
 
-function drawGround() {
-  fill(118, 52, 45);
-  rect(0, height * 0.72, width, height * 0.28);
-
-  fill(123, 54, 65);
-  triangle(0, height * 0.76, width * 0.45, height * 0.72, width, height * 0.78);
-
-  fill(102, 64, 60);
-  beginShape();
-  vertex(0, height * 0.8);
-  vertex(width * 0.1, height * 0.83);
-  vertex(width * 0.15, height * 0.84);
-  vertex(width * 0.62, height * 0.8);
-  vertex(width * 0.7, height * 0.84);
-  vertex(width, height * 0.82);
-  vertex(width, height);
-  vertex(0, height);
-  endShape(CLOSE);
-
-  fill(110, 72, 60);
-  rect(0, height * 0.72, width, 12);
-
-  for (let x = 0; x < width; x += 30) {
-    fill(90, 70, 60, 50);
-    rect(x, height * 0.72 + 18, 10, 20);
+  // ==========================================
+  // Step 4: Program the tiles to appear in sequence
+  // ==========================================
+  // Spawn a new tile every 45 frames
+  if (frameCount % 45 === 0) {
+    let randomCol = floor(random(4)); // Randomly select a column
+    tiles.push({ col: randomCol, y: -120 }); // Add to array, start above screen
   }
-}
 
-function drawFlowers() {
-  for (const flower of flowers) {
-    const sway = sin(frameCount * 0.04 + flower.x * 0.08) * 8;
-    const stemTopY = flower.y - flower.stem;
+  // ==========================================
+  // Step 5: Update and draw falling tiles
+  // ==========================================
+  for (let i = tiles.length - 1; i >= 0; i--) {
+    let t = tiles[i];
+    t.y += 3; // Move tile down by speed 3
+    
+    // Draw dark soil-colored tile
+    fill(60, 40, 20); noStroke();
+    rect(t.col * 150 + 4, t.y, 142, 120);
 
-    push();
-    translate(flower.x, flower.y);
-    rotate(radians(sway));
-
-    fill(120, 65, 45);
-    rect(-4, -flower.stem, 8, flower.stem);
-
-    fill(120, 70, 60);
-    ellipse(-12, -flower.stem + 18, 18, 12);
-    ellipse(12, -flower.stem + 28, 18, 12);
-
-    push();
-    translate(0, -flower.stem);
-    fill(flower.petal, 85, 80);
-    for (let i = 0; i < 8; i++) {
-      const ang = i * (PI / 4) + flower.angle;
-      ellipse(cos(ang) * flower.size * 0.32, sin(ang) * flower.size * 0.32, flower.size * 0.7, flower.size * 0.9);
+    // Remove tile if it falls off the bottom
+    if (t.y > 400) {
+      tiles.splice(i, 1);
     }
-    fill(48, 90, 70);
-    circle(0, 0, flower.size * 0.42);
-    pop();
-
-    pop();
   }
+
+  // Step 6: Draw score UI
+  fill(255); stroke(100, 150, 100); strokeWeight(2);
+  rect(220, 10, 160, 50, 10); 
+  fill(0); noStroke();
+  text("Growth: " + score, 300, 35); // Display real-time score
 }
 
-function drawBees() {
-  for (const bee of bees) {
-    bee.x += bee.speed;
-    bee.y += sin(frameCount * 0.05 + bee.phase) * 0.5;
-
-    if (bee.x > width + 20) {
-      bee.x = -20;
-      bee.y = random(180, height * 0.7);
+// ==========================================
+// Step 7: Program the user tapping interaction
+// ==========================================
+function mousePressed() {
+  // Calculate which column the user clicked
+  let clickedCol = floor(mouseX / 150);
+  
+  // Iterate backwards to detect hits
+  for (let i = tiles.length - 1; i >= 0; i--) {
+    let t = tiles[i];
+    
+    // Check if column matches and mouseY is within tile bounds
+    if (t.col === clickedCol && mouseY > t.y && mouseY < t.y + 120) {
+      tiles.splice(i, 1); // Remove the hit tile
+      score += 10;        // Increase score
+      break;              // Only remove one tile per click
     }
-
-    push();
-    translate(bee.x, bee.y);
-    fill(52, 70, 90);
-    ellipse(0, 0, bee.r * 2.4, bee.r * 1.6);
-    fill(48, 40, 95);
-    ellipse(-bee.r * 0.7, 0, bee.r * 0.8, bee.r * 0.8);
-    fill(52, 80, 90);
-    ellipse(bee.r * 0.8, 0, bee.r * 0.7, bee.r * 0.7);
-    stroke(0, 0, 0, 70);
-    strokeWeight(1.4);
-    line(-1, -bee.r * 1.2, -bee.r * 1.5, -bee.r * 2.2);
-    line(1, -bee.r * 1.2, bee.r * 1.5, -bee.r * 2.2);
-    noStroke();
-    pop();
   }
 }
