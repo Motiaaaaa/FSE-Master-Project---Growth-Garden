@@ -773,7 +773,9 @@ function drawButterflyIntro() {
 
   fill(C.gray);
   textSize(11);
-  text("Goal: Catch 10 butterflies", 300, 285);
+  let displayedGoal = gameLevel === "Beginner" ? 10 :
+    gameLevel === "Intermediate" ? 15 : 20;
+  text("Goal: Catch " + displayedGoal + " butterflies", 300, 285);
   text(
     timerEnabled ? "Time limit: 60 seconds" : "No time limit",
     300, 302
@@ -920,6 +922,15 @@ function createButterfly() {
 }
 
 function startButterflyGame() {
+  // Set the number of butterflies required for the selected difficulty.
+  if (gameLevel === "Beginner") {
+    butterflyGoal = 10;
+  } else if (gameLevel === "Intermediate") {
+    butterflyGoal = 15;
+  } else if (gameLevel === "Advanced") {
+    butterflyGoal = 20;
+  }
+
   gameScore = 0;
   remainingTime = 60;
   butterflies = [];
@@ -1554,3 +1565,7 @@ function handleEndClick(x, y) {
     currentExercise = "";
   }
 }
+
+
+
+
