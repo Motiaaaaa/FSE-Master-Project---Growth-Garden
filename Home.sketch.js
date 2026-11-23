@@ -1674,11 +1674,10 @@ function handleHomeClick(x, y) {
     return;
   }
 
-  if (inside(x, y, 305, 215, 190, 55)) {
-    currentExercise = "Piano Tiles";
-    currentScreen = "exercise";
+ if (inside(x, y, 305, 215, 190, 55)) {
+    window.location.href = "Piano/index.html";
     return;
-  }
+}
 }
 
 function handleIntroClick(x, y) {
