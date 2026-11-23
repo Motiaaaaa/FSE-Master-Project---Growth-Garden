@@ -35,7 +35,10 @@ let feedbackDuration = 900;
 let audioContext;
 let musicTimer = 0;
 let musicIndex = 0;
-let musicNotes = [261.63, 329.63, 392, 329.63, 293.66, 349.23, 440, 349.23];
+let musicNotes = [
+  261.63, 329.63, 392, 329.63,
+  293.66, 349.23, 440, 349.23
+];
 
 // Colors
 const C = {
@@ -81,12 +84,19 @@ function draw() {
 
   if (currentScreen === "home") {
     drawHomePage();
+
   } else if (currentScreen === "exercise") {
     drawPlaceholderPage();
+
   } else if (currentScreen === "butterflyIntro") {
     drawButterflyIntro();
+
+  } else if (currentScreen === "butterflyTutorial") {
+    drawButterflyTutorial();
+
   } else if (currentScreen === "butterflyGame") {
     drawButterflyGame();
+
   } else if (currentScreen === "butterflyEnd") {
     drawButterflyEnd();
   }
@@ -716,6 +726,50 @@ function drawPlaceholderPage() {
 }
 
 // ==================================================
+// BUTTERFLY DIFFICULTY SETTINGS
+// ==================================================
+
+function getDifficultySettings() {
+  if (gameLevel === "Intermediate") {
+    return {
+      goal: 15,
+      count: 3,
+      speed: 2.0,
+      catchDistance: 28,
+      time: 50
+    };
+  }
+
+  if (gameLevel === "Advanced") {
+    return {
+      goal: 20,
+      count: 5,
+      speed: 2.8,
+      catchDistance: 22,
+      time: 40
+    };
+  }
+
+  return {
+    goal: 10,
+    count: 1,
+    speed: 1.1,
+    catchDistance: 35,
+    time: 60
+  };
+}
+
+function getCatchDistance() {
+  let distance = getDifficultySettings().catchDistance;
+
+  if (largerTargets) {
+    distance += 12;
+  }
+
+  return distance;
+}
+
+// ==================================================
 // BUTTERFLY DIFFICULTY SCREEN
 // ==================================================
 
@@ -746,8 +800,8 @@ function drawButterflyIntro() {
 
   let levels = [
     { name: "Beginner", x: 105, speed: "Slow movement" },
-    { name: "Intermediate", x: 225, speed: "Medium movement" },
-    { name: "Advanced", x: 345, speed: "Faster movement" }
+    { name: "Intermediate", x: 225, speed: "Faster movement" },
+    { name: "Advanced", x: 345, speed: "Fast movement" }
   ];
 
   for (let level of levels) {
@@ -771,22 +825,81 @@ function drawButterflyIntro() {
     text(level.speed, level.x + 52, 244);
   }
 
+  let settings = getDifficultySettings();
+
   fill(C.gray);
   textSize(11);
-  let displayedGoal = gameLevel === "Beginner" ? 10 :
-    gameLevel === "Intermediate" ? 15 : 20;
-  text("Goal: Catch " + displayedGoal + " butterflies", 300, 285);
+  text("Goal: Catch " + settings.goal + " butterflies", 300, 282);
+
   text(
-    timerEnabled ? "Time limit: 60 seconds" : "No time limit",
-    300, 302
+    timerEnabled
+      ? "Time limit: " + settings.time + " seconds"
+      : "No time limit",
+    300, 299
   );
 
+  drawSoftButton("Watch Tutorial", 105, 320, 175, 38);
+
   drawButton(
-    "Start Exercise", 205, 320, 190, 38,
+    "Start Exercise", 295, 320, 200, 38,
     C.green, C.white
   );
 
   drawSoftButton("Back to Home", 225, 365, 150, 25);
+}
+
+// ==================================================
+// BUTTERFLY TUTORIAL
+// ==================================================
+
+function drawButterflyTutorial() {
+  drawGardenScene();
+  drawPanel(65, 25, 470, 350, 20);
+
+  fill(C.forest);
+  textStyle(BOLD);
+  textSize(25);
+  text("How to Play", 300, 65);
+
+  textStyle(NORMAL);
+  fill(C.gray);
+  textSize(12);
+  text("Follow these steps to get started!", 300, 94);
+
+  let instructions = [
+    "1. Move your hand or finger to guide the net.",
+    "2. Move the net toward a butterfly to catch it.",
+    "3. Catch the required number before time runs out.",
+    "4. Press Pause whenever you need a break."
+  ];
+
+  fill(C.dark);
+  textSize(12);
+
+  for (let i = 0; i < instructions.length; i++) {
+    textAlign(LEFT, CENTER);
+    text(instructions[i], 115, 135 + i * 31);
+  }
+
+  textAlign(CENTER, CENTER);
+  fill(C.green);
+  textStyle(BOLD);
+  textSize(11);
+  text(
+    "The net catches butterflies automatically when it gets close!",
+    300, 275
+  );
+
+  textStyle(NORMAL);
+
+  drawSoftButton(
+    "Back to Difficulty", 100, 315, 185, 38
+  );
+
+  drawButton(
+    "Start Exercise", 315, 315, 185, 38,
+    C.green, C.white
+  );
 }
 
 // ==================================================
@@ -905,48 +1018,49 @@ function playMusicNote() {
 // ==================================================
 
 function createButterfly() {
-  let speed = 1.1;
+  let settings = getDifficultySettings();
 
-  if (gameLevel === "Intermediate") speed = 1.8;
-  if (gameLevel === "Advanced") speed = 2.6;
-  if (slowMovement) speed *= 0.65;
+  let speed = settings.speed;
+
+  if (slowMovement) {
+    speed *= 0.65;
+  }
 
   return {
     x: random(70, 530),
     y: random(100, 245),
+
     speedX: random([-1, 1]) * random(speed * 0.6, speed),
     speedY: random([-1, 1]) * random(speed * 0.3, speed * 0.6),
+
     phase: random(TWO_PI),
+
+    directionTimer: random(0.6, 1.8),
+    speedFactor: random(0.85, 1.15),
+
     size: largerTargets ? 1.3 : 1
   };
 }
 
 function startButterflyGame() {
-  // Set the number of butterflies required for the selected difficulty.
-  if (gameLevel === "Beginner") {
-    butterflyGoal = 10;
-  } else if (gameLevel === "Intermediate") {
-    butterflyGoal = 15;
-  } else if (gameLevel === "Advanced") {
-    butterflyGoal = 20;
-  }
+  let settings = getDifficultySettings();
 
   gameScore = 0;
-  remainingTime = 60;
+  butterflyGoal = settings.goal;
+  remainingTime = settings.time;
+
   butterflies = [];
   sparkles = [];
   catchEffects = [];
+
   gamePaused = false;
+
   netX = 300;
   netY = 275;
+
   clearFeedback();
 
-  let count = 1;
-
-  if (gameLevel === "Intermediate") count = 2;
-  if (gameLevel === "Advanced") count = 3;
-
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < settings.count; i++) {
     butterflies.push(createButterfly());
   }
 
@@ -1021,38 +1135,75 @@ function updateGame() {
     }
   }
 
-  // Move butterflies
+  // Move butterflies with less predictable patterns
+  let settings = getDifficultySettings();
+
   for (let butterfly of butterflies) {
     butterfly.phase += delta * 5;
 
-    butterfly.x += butterfly.speedX * 60 * delta;
+    butterfly.directionTimer -= delta;
 
-    butterfly.y += butterfly.speedY * 60 * delta
-      + sin(butterfly.phase) * 0.4;
+    // Occasionally change direction and speed
+    if (butterfly.directionTimer <= 0) {
+      let baseSpeed = settings.speed;
 
-    if (butterfly.x < 35 || butterfly.x > 565) {
-      butterfly.speedX *= -1;
+      if (slowMovement) {
+        baseSpeed *= 0.65;
+      }
+
+      butterfly.speedX =
+        random([-1, 1]) * random(baseSpeed * 0.5, baseSpeed);
+
+      butterfly.speedY =
+        random([-1, 1]) * random(baseSpeed * 0.25, baseSpeed * 0.65);
+
+      butterfly.speedFactor = random(0.75, 1.35);
+
+      butterfly.directionTimer = random(0.6, 1.6);
     }
 
-    if (butterfly.y < 90 || butterfly.y > 285) {
-      butterfly.speedY *= -1;
+    // Horizontal and vertical movement
+    butterfly.x +=
+      butterfly.speedX * 60 * delta * butterfly.speedFactor;
+
+    butterfly.y +=
+      butterfly.speedY * 60 * delta * butterfly.speedFactor
+      + sin(butterfly.phase) * 0.4;
+
+    // Keep butterflies inside the play area
+    if (butterfly.x < 35) {
+      butterfly.x = 35;
+      butterfly.speedX = abs(butterfly.speedX);
+    }
+
+    if (butterfly.x > 565) {
+      butterfly.x = 565;
+      butterfly.speedX = -abs(butterfly.speedX);
+    }
+
+    if (butterfly.y < 90) {
+      butterfly.y = 90;
+      butterfly.speedY = abs(butterfly.speedY);
+    }
+
+    if (butterfly.y > 285) {
+      butterfly.y = 285;
+      butterfly.speedY = -abs(butterfly.speedY);
     }
   }
 
-  // Update the net position before checking for a catch.
-  // This makes the net follow the cursor or finger.
+  // Update net position
   let targetX = mouseX / (width / 600);
   let targetY = mouseY / (height / 400);
 
   netX = lerp(netX, constrain(targetX, 30, 570), 0.18);
   netY = lerp(netY, constrain(targetY, 100, 330), 0.18);
 
-  // AUTOMATIC NET DETECTION
-  // A butterfly is caught when it touches the net.
+  // Automatic net detection
   for (let i = butterflies.length - 1; i >= 0; i--) {
     let butterfly = butterflies[i];
 
-    let catchDistance = largerTargets ? 45 : 32;
+    let catchDistance = getCatchDistance();
 
     if (
       dist(netX, netY, butterfly.x, butterfly.y)
@@ -1183,7 +1334,7 @@ function drawGameHUD() {
     6, 5
   );
 
-  // Timer replaces the old difficulty panel
+  // Timer
   if (timerEnabled) {
     drawPanel(20, 72, 120, 55, 12);
 
@@ -1288,6 +1439,7 @@ function catchButterfly(index) {
     return;
   }
 
+  // Replace the caught butterfly
   butterflies.push(createButterfly());
 }
 
@@ -1300,7 +1452,7 @@ function checkCatch(x, y) {
   for (let i = 0; i < butterflies.length; i++) {
     let butterfly = butterflies[i];
 
-    let catchDistance = largerTargets ? 42 : 29;
+    let catchDistance = getCatchDistance();
 
     if (
       dist(x, y, butterfly.x, butterfly.y)
@@ -1457,14 +1609,17 @@ function mousePressed() {
   } else if (currentScreen === "butterflyIntro") {
     handleIntroClick(x, y);
 
+  } else if (currentScreen === "butterflyTutorial") {
+    handleTutorialClick(x, y);
+
   } else if (currentScreen === "butterflyGame") {
     if (gamePaused) {
       handlePauseClick(x, y);
+
     } else if (inside(x, y, 15, 12, 65, 30)) {
       pauseGame();
+
     } else {
-      // Clicking can still catch a butterfly,
-      // but automatic net detection works too.
       checkCatch(netX, netY);
     }
 
@@ -1536,12 +1691,24 @@ function handleIntroClick(x, y) {
   } else if (inside(x, y, 345, 210, 105, 50)) {
     gameLevel = "Advanced";
 
-  } else if (inside(x, y, 205, 320, 190, 38)) {
+  } else if (inside(x, y, 105, 320, 175, 38)) {
+    currentScreen = "butterflyTutorial";
+
+  } else if (inside(x, y, 295, 320, 200, 38)) {
     startButterflyGame();
 
   } else if (inside(x, y, 225, 365, 150, 25)) {
     currentScreen = "home";
     currentExercise = "";
+  }
+}
+
+function handleTutorialClick(x, y) {
+  if (inside(x, y, 100, 315, 185, 38)) {
+    currentScreen = "butterflyIntro";
+
+  } else if (inside(x, y, 315, 315, 185, 38)) {
+    startButterflyGame();
   }
 }
 
@@ -1565,7 +1732,3 @@ function handleEndClick(x, y) {
     currentExercise = "";
   }
 }
-
-
-
-
